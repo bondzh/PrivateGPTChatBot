@@ -1,5 +1,13 @@
-# Private GPT Chat Bot
+# Private GPT Chat Bot 
 This project is based on techleadhd's [chatgpt-retrieval](https://github.com/techleadhd/chatgpt-retrieval) and enhanced on top of it. 
+# Introduction of LangChain
+LangChain is an Open source project, and since its launch, the project has garnered over 54K+ Github stars, which shows the popularity and acceptability of the project. The project readme file describes the framework in something like this (Source: [project repo](https://github.com/langchain-ai/langchain)):
+
+Large language models (LLMs) are emerging as a transformative technology, enabling developers to build applications that they previously could not. However, using these LLMs in isolation is often insufficient for creating a truly powerful app — the real power comes when you can combine them with other sources of computation or knowledge.
+
+Clearly, It defines the purpose of the framework with its aims to assist in developing such applications where user knowledge is leveraged.
+LangChain has six main components to build LLM applications: model I/O, Data connections, Chains, Memory, Agents, and Callbacks. The framework also allows integration with many tools to develop full-stack applications, such as OpenAI, Huggingface Transformers, and Vectors stores like Pinecone and chromadb, among others. Let’s now look at some of the use cases for LangChain.
+![img](https://github.com/bondzh/PrivateGPTChatBot/blob/main/Screenshots/langchain.png)
 
 ## Installation
 Install [Langchain](https://github.com/hwchase17/langchain) and other required packages.
@@ -7,6 +15,7 @@ This project uses Langchain, OpenAI gpt-3.5-turbo model, and Chromadb. Feel free
 ```
 pip install langchain openai chromadb tiktoken unstructured
 ```
+
 Modify `constants.py` to use your own [OpenAI API key](https://platform.openai.com/account/api-keys).
 
 Place your own data into `data/` folder.
