@@ -1,68 +1,70 @@
 import os
 import sys
-
-import openai
-from langchain.chains import ConversationalRetrievalChain, RetrievalQA
-from langchain.chat_models import ChatOpenAI
-from langchain.document_loaders import DirectoryLoader, TextLoader
-from langchain.embeddings import OpenAIEmbeddings
+from langchain.document_loaders import DirectoryLoader
+from langchain.embeddings import SentenceTransformerEmbeddings
 from langchain.indexes import VectorstoreIndexCreator
-from langchain.indexes.vectorstore import VectorStoreIndexWrapper
-from langchain.llms import OpenAI
 from langchain.vectorstores import Chroma
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.chains import ConversationalRetrievalChain
+from langchain.chat_models import ChatOpenAI
 
 import constants
-import time
 
 os.environ["OPENAI_API_KEY"] = constants.APIKEY
+
+# directory path
+directory = "data/"
+
+# split the docs into chunks using recursive character splitter
+def split_docs(documents, chunk_size=1000, chunk_overlap=20):
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+    docs = text_splitter.split_documents(documents)
+    return docs
+
+def load_docs(directory):
+    loader = DirectoryLoader(directory)
+    documents = loader.load()
+    return documents
+
+# store the split documents in the docs variable
+documents = load_docs(directory)
+docs = split_docs(documents)
 
 # Enable to save to disk & reuse the model (for repeated queries on the same data)
 PERSIST = False
 
-query = None
-if len(sys.argv) > 1:
-  query = sys.argv[1]
-
 if PERSIST and os.path.exists("persist"):
-  print("Reusing index...\n")
-  vectorstore = Chroma(persist_directory="persist", embedding_function=OpenAIEmbeddings())
-  index = VectorStoreIndexWrapper(vectorstore=vectorstore)
+    print("Reusing index...\n")
+    
+    embeddings = SentenceTransformerEmbeddings(model_name="all-MiniLM-L6-v2")
+    db = Chroma.from_documents(docs, embeddings)
+    index = VectorStoreIndexCreator(vectorstore=db).from_loaders([loader])
 else:
-  #loader = TextLoader("data/data.txt") # Use this line if you only need data.txt
-  loader = DirectoryLoader("data/")
-  if PERSIST:
-    index = VectorstoreIndexCreator(vectorstore_kwargs={"persist_directory":"persist"}).from_loaders([loader])
-  else:
-    index = VectorstoreIndexCreator().from_loaders([loader])
+    loader = DirectoryLoader(directory)
+    if PERSIST:
+        index = VectorstoreIndexCreator(vectorstore_kwargs={"persist_directory": "persist"}).from_loaders([loader])
+    else:
+        index = VectorstoreIndexCreator().from_loaders([loader])
+
 
 chain = ConversationalRetrievalChain.from_llm(
-  llm=ChatOpenAI(model="gpt-3.5-turbo"),
-  retriever=index.vectorstore.as_retriever(search_kwargs={"k": 1}),
+    llm=ChatOpenAI(model="gpt-3.5-turbo"),
+    retriever=index.vectorstore.as_retriever(search_kwargs={"k": 1}),
 )
 
 chat_history = []
-#while True:
-#  if not query:
-#    query = input("   Question?: ")
-#  if query in ['quit', 'q', 'exit']:
-#    sys.exit()
-#  result = chain({"question": query, "chat_history": chat_history})
-#  print(" -->Answer: " +result['answer'])
-
-#  chat_history.append((query, result['answer']))
-#  query = None
 
 def get_answer(query, document_uploaded=False):
     global chat_history, chain, loader, index
     try:
-      # Reload documents if a new document has been uploaded
-      if document_uploaded:
-          loader = DirectoryLoader("data/")
-          index = VectorstoreIndexCreator().from_loaders([loader])
-      result = chain({"question": query, "chat_history": chat_history})
-      answer = result['answer']
-      chat_history.append((query, answer))
-      return answer
+        # Reload documents if a new document has been uploaded
+        if document_uploaded:
+            loader = DirectoryLoader("data/")
+            index = VectorstoreIndexCreator().from_loaders([loader])
+        result = chain({"question": query, "chat_history": chat_history})
+        answer = result['answer']
+        chat_history.append((query, answer))
+        return answer
     except:
-      error_message = "Please take a break, you have reached your Rate Limit in GPT 3.5. Please try again in 20s."
-      return error_message
+        error_message = "Please take a break, you have reached your Rate Limit in GPT 3.5. Please try again in 20s."
+        return error_message
