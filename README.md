@@ -16,9 +16,7 @@ This project uses Langchain, OpenAI gpt-3.5-turbo model, and Chromadb. Feel free
 ```
 pip install langchain openai chromadb tiktoken unstructured
 ```
-```
-pip install PyPDF2
-```
+
 Note: please don't use the latest version of Python. Most likely, langchain chromadb or unstructured couldn't support the latest version of Python.
 
 
