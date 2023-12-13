@@ -15,6 +15,8 @@ Install [Langchain](https://github.com/hwchase17/langchain) and other required p
 This project uses Langchain, OpenAI gpt-3.5-turbo model, and Chromadb. Feel free to change to any other model, like LLama 2 or GPT4, or Faiss db.
 ```
 pip install langchain openai chromadb tiktoken unstructured
+```
+```
 pip install PyPDF2
 ```
 Note: please don't use the latest version of Python. Most likely, langchain chromadb or unstructured couldn't support the latest version of Python.
