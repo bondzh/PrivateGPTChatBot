@@ -19,6 +19,7 @@ directory = "data/"
 def split_docs(documents, chunk_size=1000, chunk_overlap=20):
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
     docs = text_splitter.split_documents(documents)
+    #print(len(docs))
     return docs
 
 def load_docs(directory):
@@ -65,6 +66,18 @@ def get_answer(query, document_uploaded=False):
         answer = result['answer']
         chat_history.append((query, answer))
         return answer
-    except:
-        error_message = "Please take a break, you have reached your Rate Limit in GPT 3.5. Please try again in 20s."
+    except Exception as e:
+        error_message = f"An error occurred: {str(e)}."
+         # Check if the error message indicates rate limiting
+        if "Please try again in 20s. Visit https://platform.openai.com/account/rate-limits" in str(e):
+            error_message = "Please take a break, you have reached your Rate Limit in GPT 3.5. " \
+                            "Please try again in 20s."
         return error_message
+
+def print_debug_info():
+    global loader
+    print("Number of documents loaded:", len(loader.load()))
+
+# Call this function to print diagnostic information
+print_debug_info()
+
